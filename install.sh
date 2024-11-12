@@ -754,9 +754,7 @@ pushd .
       tensile_opt="${tensile_opt} -DTensile_LOGIC=${tensile_logic}"
     fi
     tensile_opt="${tensile_opt} -DTensile_CODE_OBJECT_VERSION=${tensile_cov}"
-    if [[ ${tensile_threads} != $(nproc) ]]; then
-      tensile_opt="${tensile_opt} -DTensile_CPU_THREADS=${tensile_threads}"
-    fi
+    tensile_opt="${tensile_opt} -DTensile_CPU_THREADS=${tensile_threads}"
   fi
 
   if [[ "${tensile_merge_files}" == false ]]; then

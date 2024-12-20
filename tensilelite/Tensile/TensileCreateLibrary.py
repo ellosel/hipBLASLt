@@ -42,11 +42,11 @@ from .KernelWriterAssembly import KernelWriterAssembly
 from .SolutionLibrary import MasterSolutionLibrary
 from .SolutionStructs import Solution
 from .CustomYamlLoader import load_logic_gfx_arch
+from .TensileCreateLib.ParseArguments import parseArguments
 from .Utilities.Profile import profile
 from .Utilities.Toolchain import getVersion, validateToolchain, ToolchainDefaults
 from .BuildCommands import SourceCommands, AssemblyCommands
 
-import argparse
 import collections
 import glob
 import itertools
@@ -358,10 +358,10 @@ def generateKernelObjectsFromSolutions(solutions):
 def generateLogicDataAndSolutions(logicFiles, args, cxxCompiler):
 
   # skip the logic which architectureName is not in the build target.
-  if ";" in args.Architecture:
-    archs = args.Architecture.split(";") # user arg list format
+  if ";" in args["Architecture"]:
+    archs = args["Architecture"].split(";") # user arg list format
   else:
-    archs = args.Architecture.split("_") # workaround for cmake list in list issue
+    archs = args["Architecture"].split("_") # workaround for cmake list in list issue
 
   solutions = []
   masterLibraries = {}
@@ -389,15 +389,15 @@ def generateLogicDataAndSolutions(logicFiles, args, cxxCompiler):
         nextSolIndex = masterLibraries[architectureName].merge(newLibrary, nextSolIndex)
       else:
         masterLibraries[architectureName] = newLibrary
-        masterLibraries[architectureName].version = args.version
+        masterLibraries[architectureName].version = args["Version"]
     else:
       if fullMasterLibrary is None:
         fullMasterLibrary = newLibrary
-        fullMasterLibrary.version = args.version
+        fullMasterLibrary.version = args["Version"]
       else:
         fullMasterLibrary.merge(newLibrary)
 
-    if args.GenSolTable:
+    if args["GenSolTable"]:
       # Match yaml file solutions to solution index
       for localIdx, _, s in libraryIter(newLibrary):
         matchTable[s.index] = [srcFile, localIdx]
@@ -423,7 +423,7 @@ def generateLogicDataAndSolutions(logicFiles, args, cxxCompiler):
   # remove duplicates while preserving order
   solutions = dict.fromkeys(solutions).keys()
 
-  if args.GenSolTable:
+  if args["GenSolTable"]:
     LibraryIO.write("MatchTable", matchTable)
 
   return solutions, masterLibraries, fullMasterLibrary
@@ -458,121 +458,30 @@ def TensileCreateLibrary():
   print2(HR)
   print2("")
 
-  ##############################################################################
-  # Parse Command Line Arguments
-  ##############################################################################
-  def splitExtraParameters(par):
-    """
-    Allows the --global-parameters option to specify any parameters from the command line.
-    """
-
-    (key, value) = par.split("=")
-    value = eval(value)
-    return (key, value)
-
   print2("Arguments: %s" % sys.argv)
-  argParser = argparse.ArgumentParser()
-  argParser.add_argument("LogicPath",       help="Path to LibraryLogic.yaml files.")
-  argParser.add_argument("OutputPath",      help="Where to write library files?")
-  argParser.add_argument("RuntimeLanguage", help="Which runtime language?", choices=["OCL", "HIP", "HSA"])
-  argParser.add_argument("--cxx-compiler",           dest="CxxCompiler",       action="store", default=ToolchainDefaults.CXX_COMPILER, 
-                         help=f"Default: {ToolchainDefaults.CXX_COMPILER}")
-  argParser.add_argument("--c-compiler",             dest="CCompiler",         action="store", default=ToolchainDefaults.C_COMPILER)
-  argParser.add_argument("--cmake-cxx-compiler",     dest="CmakeCxxCompiler",  action="store")
-  argParser.add_argument("--offload-bundler",        dest="OffloadBundler",    action="store", default=ToolchainDefaults.OFFLOAD_BUNDLER)
-  argParser.add_argument("--assembler",              dest="Assembler",         action="store", default=ToolchainDefaults.ASSEMBLER)
-  argParser.add_argument("--code-object-version",    dest="CodeObjectVersion", choices=["default", "V4", "V5"], action="store")
-  argParser.add_argument("--architecture",           dest="Architecture",      type=str, action="store", default="all", help="Supported archs: " + " ".join(architectureMap.keys()))
-  argParser.add_argument("--short-file-names",       dest="ShortNames",        action="store_true")
-  argParser.add_argument("--no-short-file-names",    dest="ShortNames",        action="store_false")
-  argParser.add_argument("--library-print-debug",    dest="LibraryPrintDebug", action="store_true")
-  argParser.add_argument("--no-library-print-debug", dest="LibraryPrintDebug", action="store_false")
-  argParser.add_argument("--no-compress",            dest="NoCompress",        action="store_true", help="Don't compress assembly code objects.")
-  argParser.add_argument("--experimental",           dest="Experimental",      action="store_true", 
-                         help="Include logic files in directories named 'Experimental'.")
-  argParser.add_argument("--no-enumerate",           action="store_true", help="Do not run rocm_agent_enumerator.")
-  argParser.add_argument("--version", help="Version string to embed into library file.")
-  argParser.add_argument("--logic-format", dest="LogicFormat", choices=["yaml", "json"], \
-                         action="store", default="yaml", help="select which logic format to use")
-  argParser.add_argument("--library-format", dest="LibraryFormat", choices=["yaml", "msgpack"],
-                         action="store", default="msgpack", help="select which library format to use")
-  argParser.add_argument("--generate-sources-and-exit",   dest="GenerateSourcesAndExit", action="store_true",
-                          default=False, help="Output source files only and exit.")
-  argParser.add_argument("--jobs", "-j", dest="CpuThreads", type=int,
-                          default=-1, help="Number of parallel jobs to launch.")
-  argParser.add_argument("--verbose", "-v", dest="PrintLevel", type=int,
-                          default=1, help="Set printout verbosity level.")
-  argParser.add_argument("--print-timing", dest="PrintTiming",
-                          default=False, action="store_true", help="Print duration of each stage.")
-  argParser.add_argument("--separate-architectures", dest="SeparateArchitectures", action="store_true",
-                         default=False, help="Separates TensileLibrary file by architecture")
-  argParser.add_argument("--lazy-library-loading", dest="LazyLibraryLoading", action="store_true",
-                         default=False, help="Loads Tensile libraries when needed instead of upfront.")
-  argParser.add_argument("--enable-marker", dest="EnableMarker", action="store_true",
-                         default=False, help="Enable marker in Tensile.")
-  argParser.add_argument("--global-parameters", nargs="+", type=splitExtraParameters, default=[])
-  argParser.add_argument("--no-generate-solution-table", dest="GenSolTable", action="store_false", default=True,
-                         help="Skip generating solution-yaml matching table")
-  argParser.add_argument("--asm-debug", dest="AsmDebug", action="store_true", default=False,
-                         help="Keep debug information for built code objects")
-  argParser.add_argument("--build-id", dest="BuildIdKind", action="store", default="sha1")
-  argParser.add_argument("--address-sanitizer", dest="AsanBuild", action="store_true",
-                         default=False, help="Enable ASAN build.")
-  argParser.add_argument("--keep-build-tmp", dest="KeepBuildTmp", action="store_true",
-                          default=False, help="Do not remove the temporary build directory (may required hundreds of GBs of space)"),
-  argParser.add_argument("--validate-library", dest="ValidateLibrary", action="store_true", default=False)
-  argParser.add_argument("--logic-filter", dest="LogicFilter", action="store", default="*", type=str,
-                        help="Cutomsized logic filter, default is *, i.e. all logics."
-                        " Example: gfx942/Equality/* for building equality of gfx942 only")
+  
+  arguments = parseArguments()
 
-  args = argParser.parse_args()
+  logicPath = arguments["LogicPath"]
+  libraryFormat = arguments["LibraryFormat"]
+  logicFormat = arguments["LogicFormat"]  
+  logicFilter = arguments["LogicFilter"]
+  experimental = arguments["Experimental"]
+  architecture = arguments["Architecture"]
+  cxxCompiler = arguments["CxxCompiler"]
+  offloadBundler   = arguments["OffloadBundler"]
+  assembler = arguments["Assembler"]
+  useCompression = arguments["UseCompression"]
+  outputPath = arguments["OutputPath"]
+  ensurePath(outputPath)
+  outputPath = os.path.abspath(outputPath)
 
-  logicPath = args.LogicPath
-  outputPath = args.OutputPath
-  cxxCompiler = args.CxxCompiler
-  offloadBundler   = args.OffloadBundler
-  assembler = args.Assembler
-  libraryFormat = args.LibraryFormat
-  useCompression = not args.NoCompress
   print2("OutputPath: %s" % outputPath)
   ensurePath(outputPath)
   outputPath = os.path.abspath(outputPath)
-  arguments = {}
-  arguments["RuntimeLanguage"] = args.RuntimeLanguage
-  arguments["CodeObjectVersion"] = args.CodeObjectVersion
-  arguments["Architecture"] = args.Architecture
-  arguments["SeparateArchitectures"] = args.SeparateArchitectures
-  arguments["LazyLibraryLoading"] = args.LazyLibraryLoading
-  arguments["EnableMarker"] = args.EnableMarker
-  if args.CmakeCxxCompiler:
-    os.environ["CMAKE_CXX_COMPILER"] = args.CmakeCxxCompiler
-  arguments["ShortNames"] = args.ShortNames
-  arguments["LibraryPrintDebug"] = args.LibraryPrintDebug
-  arguments["CodeFromFiles"] = False
-  arguments["LogicFormat"]  = args.LogicFormat
-  arguments["LibraryFormat"] = args.LibraryFormat
-  if args.no_enumerate:
-    arguments["AMDGPUArchPath"] = False
-
-  arguments["GenerateSourcesAndExit"] = args.GenerateSourcesAndExit
-  if arguments["GenerateSourcesAndExit"]:
-    # Generated sources are preserved and go into output dir
-    arguments["WorkingPath"] = outputPath
-
-  arguments["CpuThreads"] = args.CpuThreads
-  arguments["PrintLevel"] = args.PrintLevel
-  arguments["PrintTiming"] = args.PrintTiming
-  arguments["AsmDebug"] = args.AsmDebug
-  arguments["BuildIdKind"] = args.BuildIdKind
-  arguments["KeepBuildTmp"] = args.KeepBuildTmp
-  arguments["AsanBuild"] = args.AsanBuild
-  arguments["ValidateLibrary"] = args.ValidateLibrary
-
-  for key, value in args.global_parameters:
-    arguments[key] = value
 
   cxxCompiler, cCompiler, offloadBundler, assembler, hipconfig = validateToolchain(
-      args.CxxCompiler, args.CCompiler, args.OffloadBundler, args.Assembler, ToolchainDefaults.HIP_CONFIG
+      arguments["CxxCompiler"], arguments["CCompiler"], arguments["OffloadBundler"], arguments["Assembler"], ToolchainDefaults.HIP_CONFIG
   )
   print1(f"# HIP Version:         {getVersion(hipconfig, regex=r'(.+)')}")
   print1(f"# Cxx Compiler:        {cxxCompiler} (version {getVersion(cxxCompiler)})")
@@ -585,14 +494,14 @@ def TensileCreateLibrary():
 
   arguments["AMDClangVersion"] = getVersion(cxxCompiler)
   assignGlobalParameters(arguments, cxxCompiler)
-
+  
   if not os.path.exists(logicPath):
     printExit("LogicPath %s doesn't exist" % logicPath)
 
-  if ";" in arguments["Architecture"]:
-    archs = arguments["Architecture"].split(";") # user arg list format
+  if ";" in architecture:
+    archs = architecture.split(";") # user arg list format
   else:
-    archs = arguments["Architecture"].split("_") # workaround for cmake list in list issue
+    archs = architecture.split("_") # workaround for cmake list in list issue
   logicArchs = set()
   for arch in archs:
     if arch in architectureMap:
@@ -602,12 +511,12 @@ def TensileCreateLibrary():
 
   # Recursive directory search
   logicExtFormat = ".yaml"
-  if args.LogicFormat == "yaml":
+  if logicFormat == "yaml":
     pass
-  elif args.LogicFormat == "json":
+  elif logicFormat == "json":
     logicExtFormat = ".json"
   else:
-    printExit("Unrecognized LogicFormat", args.LogicFormat)
+    printExit(f"Unrecognized LogicFormat {logicFormat}")
 
   def archMatch(arch: str, archs: List[str]):
     return (arch in archs) or any(a.startswith(arch) for a in archs)
@@ -615,13 +524,13 @@ def TensileCreateLibrary():
   def validLogicFile(p: Path):
     return p.suffix == logicExtFormat and ("all" in archs or archMatch(load_logic_gfx_arch(p), archs))
 
-  globPattern = os.path.join(logicPath, f"**/{args.LogicFilter}{logicExtFormat}")
+  globPattern = os.path.join(logicPath, f"**/{logicFilter}{logicExtFormat}")
   print1(f"# LogicFilter:       {globPattern}")
   logicFiles = (os.path.join(logicPath, file) for file in glob.iglob(globPattern, recursive=True))
   logicFiles = [file for file in logicFiles if validLogicFile(Path(file))]
 
-  print1(f"# Experimental:      {args.Experimental}")
-  if not args.Experimental:
+  print1(f"# Experimental:      {experimental}")
+  if not experimental:
     logicFiles = [file for file in logicFiles if "experimental" not in map(str.lower, Path(file).parts)]
 
   print2(f"# LibraryLogicFiles: {len(logicFiles)}")
@@ -634,7 +543,7 @@ def TensileCreateLibrary():
   ##############################################################################
 
   # Parse logicData, solutions, and masterLibraries from logic files
-  solutions, masterLibraries, fullMasterLibrary = generateLogicDataAndSolutions(logicFiles, args, cxxCompiler)
+  solutions, masterLibraries, fullMasterLibrary = generateLogicDataAndSolutions(logicFiles, arguments, cxxCompiler)
 
   kernels, kernelHelperObjs, _ = generateKernelObjectsFromSolutions(solutions)
 
@@ -667,19 +576,19 @@ def TensileCreateLibrary():
         else:
           masterFile = os.path.join(newLibraryDir, "TensileLibrary_"+archName)
         newMasterLibrary.applyNaming(kernelMinNaming)
-        LibraryIO.write(masterFile, Utils.state(newMasterLibrary), args.LibraryFormat)
+        LibraryIO.write(masterFile, Utils.state(newMasterLibrary), libraryFormat)
 
         #Write placeholder libraries
         for name, lib in newMasterLibrary.lazyLibraries.items():
           filename = os.path.join(newLibraryDir, name)
           lib.applyNaming(kernelMinNaming) #@TODO Check to see if kernelMinNaming is correct
-          LibraryIO.write(filename, Utils.state(lib), args.LibraryFormat)
+          LibraryIO.write(filename, Utils.state(lib), libraryFormat)
 
   else:
     masterFile = os.path.join(newLibraryDir, "TensileLibrary")
     fullMasterLibrary.applyNaming = timing(fullMasterLibrary.applyNaming)
     fullMasterLibrary.applyNaming(kernelMinNaming)
-    LibraryIO.write(masterFile, Utils.state(fullMasterLibrary), args.LibraryFormat)
+    LibraryIO.write(masterFile, Utils.state(fullMasterLibrary), libraryFormat)
 
   theMasterLibrary = fullMasterLibrary
   if globalParameters["SeparateArchitectures"]:

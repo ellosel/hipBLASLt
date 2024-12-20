@@ -384,32 +384,22 @@ def generateLogicDataAndSolutions(logicFiles, args, cxxCompiler):
     if architectureName == "":
       continue
 
-    if globalParameters["SeparateArchitectures"] or globalParameters["LazyLibraryLoading"]:
-      if architectureName in masterLibraries:
-        nextSolIndex = masterLibraries[architectureName].merge(newLibrary, nextSolIndex)
-      else:
-        masterLibraries[architectureName] = newLibrary
-        masterLibraries[architectureName].version = args["Version"]
+    if architectureName in masterLibraries:
+      nextSolIndex = masterLibraries[architectureName].merge(newLibrary, nextSolIndex)
     else:
-      if fullMasterLibrary is None:
-        fullMasterLibrary = newLibrary
-        fullMasterLibrary.version = args["Version"]
-      else:
-        fullMasterLibrary.merge(newLibrary)
+      masterLibraries[architectureName] = newLibrary
+      masterLibraries[architectureName].version = args["Version"]
 
     if args["GenSolTable"]:
       # Match yaml file solutions to solution index
       for localIdx, _, s in libraryIter(newLibrary):
         matchTable[s.index] = [srcFile, localIdx]
 
-  if globalParameters["SeparateArchitectures"] or globalParameters["LazyLibraryLoading"]:
     if "fallback" in masterLibraries.keys():
       for key, value in masterLibraries.items():
         if key != "fallback":
-          value.merge(masterLibraries["fallback"])
-
-      masterLibraries.pop("fallback")
-
+          value.merge(masterLibraries["fallback"])  
+      masterLibraries.pop("fallback")  
     for _, masterLibrary in masterLibraries.items():
       for _, sol in masterLibrary.solutions.items():
         solutions.append(sol.originalSolution)
@@ -417,8 +407,6 @@ def generateLogicDataAndSolutions(logicFiles, args, cxxCompiler):
         for _, sol in lib.solutions.items():
           sol.originalSolution._state["codeObjectFile"] = name
           solutions.append(sol.originalSolution)
-  else:
-    solutions = [sol.originalSolution for _, sol in fullMasterLibrary.solutions.items()]
 
   # remove duplicates while preserving order
   solutions = dict.fromkeys(solutions).keys()
@@ -537,12 +525,6 @@ def TensileCreateLibrary():
   for logicFile in logicFiles:
     print2("#   %s" % logicFile)
 
-
-  ##############################################################################
-  # Parse config files
-  ##############################################################################
-
-  # Parse logicData, solutions, and masterLibraries from logic files
   solutions, masterLibraries, fullMasterLibrary = generateLogicDataAndSolutions(logicFiles, arguments, cxxCompiler)
 
   kernels, kernelHelperObjs, _ = generateKernelObjectsFromSolutions(solutions)
@@ -568,31 +550,19 @@ def TensileCreateLibrary():
              if globalParameters["AsmCaps"][arch]["SupportedISA"]]
   newLibraryDir = ensurePath(os.path.join(outputPath, 'library'))
 
-  if globalParameters["SeparateArchitectures"] or globalParameters["LazyLibraryLoading"]:
-    for archName, newMasterLibrary in masterLibraries.items():
-      if archName in archs:
-        if globalParameters["LazyLibraryLoading"]:
-          masterFile = os.path.join(newLibraryDir, "TensileLibrary_lazy_"+archName)
-        else:
-          masterFile = os.path.join(newLibraryDir, "TensileLibrary_"+archName)
-        newMasterLibrary.applyNaming(kernelMinNaming)
-        LibraryIO.write(masterFile, Utils.state(newMasterLibrary), libraryFormat)
-
-        #Write placeholder libraries
-        for name, lib in newMasterLibrary.lazyLibraries.items():
-          filename = os.path.join(newLibraryDir, name)
-          lib.applyNaming(kernelMinNaming) #@TODO Check to see if kernelMinNaming is correct
-          LibraryIO.write(filename, Utils.state(lib), libraryFormat)
-
-  else:
-    masterFile = os.path.join(newLibraryDir, "TensileLibrary")
-    fullMasterLibrary.applyNaming = timing(fullMasterLibrary.applyNaming)
-    fullMasterLibrary.applyNaming(kernelMinNaming)
-    LibraryIO.write(masterFile, Utils.state(fullMasterLibrary), libraryFormat)
-
-  theMasterLibrary = fullMasterLibrary
-  if globalParameters["SeparateArchitectures"]:
-    theMasterLibrary = list(masterLibraries.values())[0]
+  for archName, newMasterLibrary in masterLibraries.items():
+    if archName in archs:
+      if globalParameters["LazyLibraryLoading"]:
+        masterFile = os.path.join(newLibraryDir, "TensileLibrary_lazy_"+archName)
+      else:
+        masterFile = os.path.join(newLibraryDir, "TensileLibrary_"+archName)
+      newMasterLibrary.applyNaming(kernelMinNaming)
+      LibraryIO.write(masterFile, Utils.state(newMasterLibrary), libraryFormat)
+      #Write placeholder libraries
+      for name, lib in newMasterLibrary.lazyLibraries.items():
+        filename = os.path.join(newLibraryDir, name)
+        lib.applyNaming(kernelMinNaming) #@TODO Check to see if kernelMinNaming is correct
+        LibraryIO.write(filename, Utils.state(lib), libraryFormat)
 
   print1("# Tensile Library Writer DONE")
   print1(HR)

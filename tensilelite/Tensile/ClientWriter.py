@@ -24,7 +24,7 @@
 
 from . import ClientExecutable
 from . import LibraryIO
-from .TensileInstructions import getGfxName, DataType, getCOVFromParam
+from .TensileInstructions import getGfxName, DataType
 from .Common import globalParameters, pushWorkingPath, popWorkingPath, print1, printExit, CHeader, printWarning, listToInitializer, ClientExecutionLock
 from .SolutionStructs import Problem, ProblemType, ProblemSizesMock, ProblemSizesMockDummy, ActivationArgs, BiasTypeArgs, FactorDimArgs
 from .TensileCreateLibrary import copyStaticFiles
@@ -214,12 +214,6 @@ def getBuildClientLibraryScript(buildPath, libraryLogicPath, cxxCompiler):
   runScriptFile = io.StringIO()
 
   callCreateLibraryCmd = globalParameters["ScriptPath"] + "/bin/TensileCreateLibrary"
-
-
-  if globalParameters["MergeFiles"]:
-    callCreateLibraryCmd += " --merge-files"
-  else:
-    callCreateLibraryCmd += " --no-merge-files"
 
   if globalParameters["ShortNames"]:
     callCreateLibraryCmd += " --short-file-names"
@@ -727,13 +721,7 @@ def writeClientParameters(forBenchmark, solutions, problemSizes, stepName, \
   """
 
   if forBenchmark:
-    if globalParameters["MergeFiles"]:
-      h += "#include \"Solutions.h\"\n"
-    else:
-      for solution in solutions:
-        solutionName = solutionWriter.getSolutionName(solution)
-        h += "#include \"" + solutionName + ".h\"\n"
-        h += "#include \"Solutions.h\"\n"
+    h += "#include \"Solutions.h\"\n"
     h += "#include \"ReferenceCPU.h\"\n"
     h += "\n"
   else:

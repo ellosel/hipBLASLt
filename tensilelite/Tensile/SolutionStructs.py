@@ -55,6 +55,7 @@ import collections
 import math
 import operator
 import sys
+import pprint
 
 ########################################
 # Print a reject message :
@@ -1780,6 +1781,21 @@ class Solution(collections.abc.Mapping):
     else:
       state["EnableMatrixInstruction"] = False
 
+    temp = {}
+    temp["EnableF32XdlMathOp"] = state["EnableF32XdlMathOp"]
+    temp["MatrixInstruction"] = state["MatrixInstruction"]
+    temp["ThreadTile"] = state["ThreadTile"]
+    temp["MFMA_BF16_1K"] = state["MFMA_BF16_1K"]
+    temp["EnableMatrixInstruction"] = state["EnableMatrixInstruction"]
+    temp["MIBlock"] = state["MIBlock"]
+    temp['MIWaveGroup'] = state['MIWaveGroup']
+    temp['MIWaveTile'] = state['MIWaveTile']
+    temp['MIInputPerThread'] = state['MIInputPerThread']
+    temp['MIInputPerThreadA'] = state['MIInputPerThreadA'] 
+    temp['MIInputPerThreadB'] = state['MIInputPerThreadB']
+    temp['MIInputPerThreadMetadata'] = state['MIInputPerThreadMetadata']
+    
+    print(f">> MI Parameters: {pprint.pformat(temp)}")
 
   ##############################################
   # check and calculate Wave Separate Global Read

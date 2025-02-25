@@ -61,6 +61,7 @@ def generateForkedSolutions(problemType, constantParams, forkPermutations, cxxCo
         solutionObject = Solution(solution, cxxCompiler)
         if solutionObject["Valid"]:
             if solutionObject not in solutionSet:
+                print(solutionObject._state)                
                 solutionSet.add(solutionObject)
                 solutions.append(solutionObject)
         elif globalParameters["PrintSolutionRejectionReason"]:

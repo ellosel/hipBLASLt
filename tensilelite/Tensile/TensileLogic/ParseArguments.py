@@ -23,12 +23,11 @@
 ################################################################################
 
 from argparse import ArgumentParser
-from typing import Any, Dict
 
 from Tensile.Toolchain.Validators import ToolchainDefaults
 
 
-def parseArguments() -> Dict[str, Any]:
+def parseArguments():
     """
     Returns:
         A dictionary containing the keys representing options and their values.
@@ -40,12 +39,8 @@ def parseArguments() -> Dict[str, Any]:
     )
 
     argParser.add_argument("LogicPath", help="Path to LibraryLogic.yaml files.")
-    argParser.add_argument(
-        "--check-matrix-instruction",
-        dest="CheckMatrixInstruction",
-        action="store_true",
-        help="Checks that matrix instructions are valid for all target ISAs.",
-    )
+    argParser.add_argument("--check", dest="Check", action="store_true", help="Run all checks.")
+    argParser.add_argument("-v", "--verbose", dest="Verbose", type=int, default=1, choices=[0, 1, 2, 3], help="Set print level with ``--v 2``.")
     argParser.add_argument(
         "--jobs",
         "-j",

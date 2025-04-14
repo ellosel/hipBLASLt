@@ -22,7 +22,6 @@
 #
 ################################################################################
 
-from rocisa.enum import DataTypeEnum
 from ..TensileInstructions import DataType, Module, vgpr, VMacF32, SSetPrior
 from ..Component import Component, MAC
 
@@ -34,7 +33,7 @@ class MAC_F32_Plain(MAC):
     def asmCaps(caps):
         return caps["v_mac_f32"] or caps["v_fma_f32"]
 
-    kernel = {"ProblemType": {"DataType": DataType(DataTypeEnum.Float)}}
+    kernel = {"ProblemType": {"DataType": DataType(DataType.single)}}
 
     def __call__(self, writer, tPA, tPB, m, innerUnroll):
         kernel = writer.states.kernel

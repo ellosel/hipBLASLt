@@ -94,16 +94,15 @@ namespace TensileLite
         Int32,
         BFloat16,
         Int8,
-        Int64,
-        XFloat32,
-        Float8_fnuz,
-        BFloat8_fnuz,
-        Float8BFloat8_fnuz,
-        BFloat8Float8_fnuz,
         Float8,
         BFloat8,
+        Float8_fnuz,
+        BFloat8_fnuz,
+        XFloat32,
         Float8BFloat8,
         BFloat8Float8,
+        Float8BFloat8_fnuz,
+        BFloat8Float8_fnuz,
         Count,
         None = Count
     };
@@ -226,11 +225,6 @@ namespace TensileLite
     };
 
     template <>
-    struct TypeInfo<int64_t> : public BaseTypeInfo<int64_t, DataType::Int64, 1, false, true>
-    {
-    };
-
-    template <>
     struct TypeInfo<Half> : public BaseTypeInfo<Half, DataType::Half, 1, false, false>
     {
     };
@@ -302,7 +296,6 @@ namespace TensileLite
                                          Half,
                                          Int8x4,
                                          int32_t,
-                                         int64_t,
                                          BFloat16,
                                          Float8,
                                          BFloat8,

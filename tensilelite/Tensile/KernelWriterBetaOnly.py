@@ -250,7 +250,7 @@ class KernelWriterBetaOnly(KernelWriterBase):
     if globalAccum:
       ptrStr = problemType["ComputeDataType"].toDevice(self.language)
       if problemType["DataType"].isHalf() and problemType["HighPrecisionAccumulate"]:
-        ptrStr = DataType('s').toDevice(self.language)
+        ptrStr = DataType('single').toDevice(self.language)
     else:
       ptrStr = problemType["DataType"].toDevice(self.language)
     kStr += "#define SCALAR_ZERO ((%s)(0))%s" % (ptrStr, self.endLine )

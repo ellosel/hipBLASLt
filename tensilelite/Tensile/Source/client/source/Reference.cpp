@@ -199,7 +199,6 @@ namespace TensileLite
                                     || std::is_same<double, Accumulator>::value
                                     || std::is_same<BFloat16, Accumulator>::value
                                     || std::is_same<int32_t, Accumulator>::value
-                                    || std::is_same<int64_t, Accumulator>::value
                                     || std::is_same<int8_t, Accumulator>::value,
                                 Accumulator>::type
             GetValue(DataType dataType, void const* voidPtr, int pos, bool aConjugate)
@@ -228,12 +227,6 @@ namespace TensileLite
             {
                 auto typedPtr = static_cast<int32_t const*>(voidPtr);
                 return cast<Accumulator>(Transform<int32_t>::Input(typedPtr[pos], aConjugate));
-            }
-            break;
-            case DataType::Int64:
-            {
-                auto typedPtr = static_cast<int64_t const*>(voidPtr);
-                return cast<Accumulator>(Transform<int64_t>::Input(typedPtr[pos], aConjugate));
             }
             break;
             case DataType::BFloat16:
@@ -290,7 +283,6 @@ namespace TensileLite
                                     && !std::is_same<double, Accumulator>::value
                                     && !std::is_same<BFloat16, Accumulator>::value
                                     && !std::is_same<int32_t, Accumulator>::value
-                                    && !std::is_same<int64_t, Accumulator>::value
                                     && !std::is_same<int8_t, Accumulator>::value
                                     && !std::is_same<Float8, Accumulator>::value
                                     && !std::is_same<BFloat8, Accumulator>::value
@@ -312,7 +304,6 @@ namespace TensileLite
                                        || std::is_same<Float8_fnuz, Accumulator>::value
                                        || std::is_same<BFloat8_fnuz, Accumulator>::value
                                        || std::is_same<int32_t, Accumulator>::value
-                                       || std::is_same<int64_t, Accumulator>::value
                                        || std::is_same<int8_t, Accumulator>::value,
                                    bool> = true>
         void SetValue(DataType dataType, Accumulator& src, void* dstPtr, size_t pos)
@@ -383,7 +374,6 @@ namespace TensileLite
             case DataType::ComplexFloat:
             case DataType::ComplexDouble:
             case DataType::Int8x4:
-            case DataType::Int64:
             case DataType::Count:
             case DataType::Float8BFloat8:
             case DataType::BFloat8Float8:
@@ -398,7 +388,6 @@ namespace TensileLite
                                        && !std::is_same<double, Accumulator>::value
                                        && !std::is_same<BFloat16, Accumulator>::value
                                        && !std::is_same<int32_t, Accumulator>::value
-                                       && !std::is_same<int64_t, Accumulator>::value
                                        && !std::is_same<int8_t, Accumulator>::value
                                        && !std::is_same<Float8, Accumulator>::value
                                        && !std::is_same<BFloat8, Accumulator>::value
@@ -413,7 +402,6 @@ namespace TensileLite
             case DataType::Double:
             case DataType::Half:
             case DataType::Int32:
-            case DataType::Int64:
             case DataType::BFloat16:
             case DataType::Int8:
             case DataType::Float8:

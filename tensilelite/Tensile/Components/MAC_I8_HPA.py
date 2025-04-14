@@ -22,7 +22,6 @@
 #
 ################################################################################
 
-from rocisa.enum import DataTypeEnum
 from ..TensileInstructions import DataType, Module
 from ..Component import Component, MAC
 
@@ -32,7 +31,7 @@ class FMA_I8_HPA(MAC):
         return True
 
     kernel = {
-        "ProblemType": {"DataType": DataType(DataTypeEnum.Int8), "HighPrecisionAccumulate": True},
+        "ProblemType": {"DataType": DataType(DataType.int8), "HighPrecisionAccumulate": True},
     }
 
     def __call__(self, writer, m, innerUnroll):

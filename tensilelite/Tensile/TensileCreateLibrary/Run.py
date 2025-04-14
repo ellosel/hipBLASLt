@@ -121,15 +121,15 @@ def buildAssemblyKernels(asmPath: Path,
                          solnLibs: List[tuple]):
   kernels = [s.getKernels()[0] for s in solnLibs[0]]
 
-  visited = set()
-  duplicates = 0
-  for k in kernels:
-    base = getKernelNameMin(k, False)
-    k.duplicate = True if base in visited else False
-    duplicates += k.duplicate
-    visited.add(base)
-  uniqueAsmKernels = [k for k in kernels if not k.duplicate]
-  #uniqueAsmKernels = [k for k in kernels if "BuildKernels" in k]
+  #visited = set()
+  #duplicates = 0
+  #for k in kernels:
+  #  base = getKernelNameMin(k, False)
+  #  k.duplicate = True if base in visited else False
+  #  duplicates += k.duplicate
+  #  visited.add(base)
+  #uniqueAsmKernels = [k for k in kernels if not k.duplicate]
+  uniqueAsmKernels = [k for k in kernels if "BuildKernel" in k]
 
   pksResults = [_processKernelSource(kernelWriterAssembly, data, False, False, None, k) for k in uniqueAsmKernels]
   asmPidPath = asmPath / str(getpid())
@@ -372,7 +372,7 @@ def run():
                           generateKernelHelperObjects(kernels, isaInfoMap))
   kernelsLib = str(srcCodeObjectPath / "Kernels.so")
   srcToolchain.compiler(srcFiles, kernelsLib, str(outputPath), archs)
-  #buildSourceCodeObjectFile(srcToolchain, libraryPath, kernelsLib)
+  buildSourceCodeObjectFile(srcToolchain, libraryPath, kernelsLib)
 
   if not arguments["KeepBuildTmp"]:
     if buildTmp.exists() and buildTmp.is_dir():

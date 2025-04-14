@@ -24,10 +24,6 @@
 
 include(CMakeParseArguments)
 
-if(NOT Rocisa_FOUND)
-    find_package(Rocisa 0.1.0 EXACT REQUIRED)
-endif()
-
 if(NOT DEFINED Tensile_ROOT)
     # Compute the installation prefix relative to this file.
     get_filename_component(Tensile_PREFIX "${CMAKE_CURRENT_LIST_FILE}" PATH)
@@ -213,7 +209,7 @@ function(TensileCreateLibraryFiles
     set(Options ${Options} "--build-id=${Tensile_BUILD_ID}")
   endif()
 
-  set(CommandLine ${CMAKE_COMMAND} -E env PYTHONPATH=${Rocisa_LIBRARIES} -- ${VIRTUALENV_BIN_DIR}/${VIRTUALENV_PYTHON_EXENAME} ${Script} ${Options} ${Tensile_LOGIC_PATH} ${Tensile_OUTPUT_PATH} HIP)
+  set(CommandLine ${VIRTUALENV_BIN_DIR}/${VIRTUALENV_PYTHON_EXENAME} ${Script} ${Options} ${Tensile_LOGIC_PATH} ${Tensile_OUTPUT_PATH} HIP)
   message(STATUS "Tensile_CREATE_COMMAND: ${CommandLine}")
 
   if(Tensile_EMBED_LIBRARY)
@@ -278,7 +274,7 @@ function(TensileCreateExtOpLibraries OutputFolder ArchStr)
     COMMAND ${CMAKE_COMMAND} -E rm -rf ${build_tmp_dir}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${build_tmp_dir}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${OutputFolder}
-    COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${Rocisa_LIBRARIES} -- bash "${script}" "\"${Archs}\"" "${build_tmp_dir}" "${VIRTUALENV_HOME_DIR}" "${Tensile_BUILD_ID}"
+    COMMAND bash "${script}" "\"${Archs}\"" "${build_tmp_dir}" "${VIRTUALENV_HOME_DIR}" "${Tensile_BUILD_ID}"
     COMMAND ${CMAKE_COMMAND} -E copy ${ext_op_library_path} ${build_tmp_dir}/extop_*.co ${OutputFolder}
   )
 

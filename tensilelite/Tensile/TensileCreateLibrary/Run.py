@@ -22,8 +22,6 @@
 #
 ################################################################################
 
-import rocisa
-
 import functools
 import shutil
 from pathlib import Path
@@ -40,6 +38,7 @@ from Tensile.SolutionStructs.Naming import getKernelFileBase, getKernelNameMin
 from Tensile.KernelWriterAssembly import KernelWriterAssembly
 from Tensile.SolutionLibrary import MasterSolutionLibrary
 from Tensile.SolutionStructs import kernelObjectNames
+from Tensile.TensileInstructions import TensileInstructions
 from Tensile.Toolchain.Assembly import makeAssemblyToolchain, buildAssemblyCodeObjectFiles
 from Tensile.Toolchain.Source import makeSourceToolchain, SourceToolchain, buildSourceCodeObjectFile
 from Tensile.Toolchain.Validators import validateToolchain
@@ -334,7 +333,7 @@ def run():
                                            assemblyPath, 
                                            asmToolchain.assembler, 
                                            writerAsm, 
-                                           rocisa.rocIsa.getInstance().getData(), 
+                                           TensileInstructions(), 
                                            not arguments["KeepBuildTmp"])
   unaryBuildCOFile = functools.partial(buildAssemblyCodeObjectFiles, 
                                        asmToolchain.linker, 

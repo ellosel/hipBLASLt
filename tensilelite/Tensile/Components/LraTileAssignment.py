@@ -22,9 +22,8 @@
 #
 ################################################################################
 
-from rocisa.container import ContinuousRegister
 from ..TensileInstructions import Module, VAddU32, staticMultiply, staticMultiplyAdd, vectorStaticDivide, \
-                                vectorStaticRemainder, vectorStaticDivideAndRemainder, vgpr
+                                vectorStaticRemainder, vectorStaticDivideAndRemainder, RegisterPoolResource, vgpr
 from ..Component import LraTileAssignment, LraTileProperties
 from dataclasses import dataclass
 
@@ -56,7 +55,7 @@ class LraTileAssignmentVALU(LraTileAssignment):
         LdsPad           = kernel["LdsPad%s" % tc] if kernel["LdsBlockSizePerPad%s" % tc] == 0 else 0
         strideTile       = kernel["_DepthU%s"%tc] + LdsPad if umlds else 1
         tmpVgpr          = writer.vgprPool.checkOutAligned(2,2,"tmpVgpr")
-        tmpVgprRes       = ContinuousRegister(tmpVgpr, 2)
+        tmpVgprRes       = RegisterPoolResource(tmpVgpr, 2)
 
         with writer.allocTmpSgpr(1) as tmpSgprInfo:
             if tP["tileIdx"] == 0:
@@ -129,7 +128,7 @@ class LraTileAssignmentMFMA(LraTileAssignment):
         tReg    = writer.vgprPool.checkOut(1,"tReg") # remainder
         kReg    = writer.vgprPool.checkOut(1,"kReg") # remainder
         tmpVgpr = writer.vgprPool.checkOutAligned(2,2,"tmpVgpr")
-        tmpVgprRes = ContinuousRegister(tmpVgpr, 2)
+        tmpVgprRes = RegisterPoolResource(tmpVgpr, 2)
 
         module.add(self.LraTileAssignmentCode(writer, kernel, tP, tReg, kReg, tmpVgprRes))
 

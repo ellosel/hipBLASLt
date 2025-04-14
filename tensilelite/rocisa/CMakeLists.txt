@@ -58,10 +58,6 @@ set(ROCISAINST_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rocisa/src/instruction/instruc
                       ${CMAKE_CURRENT_SOURCE_DIR}/rocisa/src/instruction/mem.cpp
                       ${CMAKE_CURRENT_SOURCE_DIR}/rocisa/src/instruction/mfma.cpp)
 
-set(ROCISAPASS_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rocisa/src/pass/pass.cpp
-                      ${CMAKE_CURRENT_SOURCE_DIR}/rocisa/src/pass/graph.cpp
-                      ${CMAKE_CURRENT_SOURCE_DIR}/rocisa/src/pass/composite.cpp)
-
 nanobind_add_module(rocisa NOMINSIZE NB_SUPPRESS_WARNINGS 
                         ${CMAKE_CURRENT_SOURCE_DIR}/rocisa/src/main.cpp
                         ${CMAKE_CURRENT_SOURCE_DIR}/rocisa/src/base.cpp
@@ -70,6 +66,5 @@ nanobind_add_module(rocisa NOMINSIZE NB_SUPPRESS_WARNINGS
                         ${CMAKE_CURRENT_SOURCE_DIR}/rocisa/src/count.cpp
                         ${CMAKE_CURRENT_SOURCE_DIR}/rocisa/src/enum.cpp
                         ${CMAKE_CURRENT_SOURCE_DIR}/rocisa/src/label.cpp
-                        ${ROCISAINST_SOURCE}
-                        ${ROCISAPASS_SOURCE})
+                        ${ROCISAINST_SOURCE})
 target_include_directories(rocisa PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/rocisa/include)

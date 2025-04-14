@@ -79,7 +79,7 @@ else()
 endif()
 
 # Add rocisa
-add_subdirectory(rocisa)
+add_subdirectory(${CMAKE_SOURCE_DIR}/rocisa)
 
 # Find Python interpreter
 find_package(PythonInterp REQUIRED)

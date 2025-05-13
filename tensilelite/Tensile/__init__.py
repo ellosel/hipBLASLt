@@ -31,6 +31,7 @@ __version__ = "4.33.0"
 
 ROOT_PATH: str = path.dirname(__file__)
 SOURCE_PATH: str = path.join(ROOT_PATH, "Source")
+CMAKE_PATH: str = path.join(ROOT_PATH, "../next-cmake")
 CUSTOM_KERNEL_PATH: str = path.join(ROOT_PATH, "CustomKernels")
 
 def PrintTensileRoot():

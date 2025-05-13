@@ -52,7 +52,9 @@ endif()
 set(HIPBLASLT_ENABLE_DEVICE ON CACHE BOOL "Build hipBLASLt device libraries.")
 set(HIPBLASLT_ENABLE_CLIENT ON CACHE BOOL "Build hipBLASLt client apps.")
 cmake_dependent_option(HIPBLASLT_ENABLE_HOST "Build hipBLASLt host library." ON "HIPBLASLT_ENABLE_CLIENT" OFF)
+set(HIPBLASLT_ENABLE_TENSILEITE_CLIENT ON CACHE BOOL "Build tensilelite client app.")
 set(HIPBLASLT_ENABLE_COVERAGE OFF CACHE BOOL "Build gcov support")
+
 
 if(HIPBLASLT_ENABLE_CLIENT)
     set(HIPBLASLT_BUILD_TESTING ON CACHE BOOL "Build hipblaslt client tests.")
@@ -275,6 +277,9 @@ if(HIPBLASLT_ENABLE_DEVICE)
 endif()
 if(HIPBLASLT_ENABLE_CLIENT)
     add_subdirectory(clients)
+endif()
+if(HIPBLASLT_ENABLE_TENSILELITE_CLIENT)
+    add_subdirectory(tensilelite-client)
 endif()
 
 

@@ -28,7 +28,7 @@ import subprocess
 from typing import Optional
 from pathlib import Path
 
-from . import SOURCE_PATH
+from . import CMAKE_PATH
 from Tensile.Common import print2, ClientExecutionLock, ensurePath, CLIENT_BUILD_DIR
 from Tensile.Common.GlobalParameters import globalParameters
 
@@ -58,15 +58,17 @@ class CMakeEnvironment:
         return os.path.join(self.buildDir, path, *paths)
 
 def clientExecutableEnvironment(builddir: Optional[str], cxxCompiler: str, cCompiler: str):
-    sourcedir = SOURCE_PATH
+    sourcedir = CMAKE_PATH
 
     builddir = ensurePath(builddir)
 
     options = {'CMAKE_BUILD_TYPE': globalParameters["CMakeBuildType"],
-               'TENSILE_USE_MSGPACK': 'ON',
-               'TENSILE_USE_LLVM': 'OFF' if (os.name == "nt") else 'ON',
-               'Tensile_LIBRARY_FORMAT': globalParameters["LibraryFormat"],
-               'Tensile_ENABLE_MARKER' : globalParameters["EnableMarker"],
+               'HIPBLASLT_ENABLE_MSGPACK': 'ON',
+               'HIPBLASLT_ENABLE_LLVM': 'OFF' if (os.name == "nt") else 'ON',
+               'HIPBLASLT_LIBRARY_FORMAT': globalParameters["LibraryFormat"],
+               'HIPBLASLT_ENABLE_MARKER' : globalParameters["EnableMarker"],
+               'HIPBLASLT_ENABLE_DEVICE' : "OFF",
+               'HIPBLASLT_ENABLE_CLIENTS' : "OFF",
                'CMAKE_CXX_COMPILER': os.path.join(globalParameters["ROCmBinPath"], cxxCompiler),
                'CMAKE_C_COMPILER': os.path.join(globalParameters["ROCmBinPath"], cCompiler)}
 

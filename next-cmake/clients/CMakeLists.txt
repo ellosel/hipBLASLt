@@ -63,6 +63,7 @@ target_link_libraries(hipblaslt-bench
     PRIVATE
         hip::device
         hipblaslt-clients-common
+        OpenMP::OpenMP_CXX
 )
 
 # TODO: Still haven't added hipblaslt-bench-groupedgemm-fixed-mk and related targets
